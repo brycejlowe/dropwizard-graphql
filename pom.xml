@@ -36,11 +36,4 @@
         <module>graphql-core</module>
         <module>graphql-example</module>
     </modules>
-
-    <scm>
-        <connection>scm:git:git://github.com/smoketurner/dropwizard-graphql.git</connection>
-        <developerConnection>scm:git:git@github.com:smoketurner/dropwizard-graphql.git</developerConnection>
-        <url>https://github.com/smoketurner/dropwizard-graphql</url>
-        <tag>v1.3.8-1</tag>
-    </scm>
 </project>
