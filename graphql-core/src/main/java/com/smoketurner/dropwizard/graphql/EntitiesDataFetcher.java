@@ -15,10 +15,21 @@
  */
 package com.smoketurner.dropwizard.graphql;
 
-import io.dropwizard.Configuration;
-import io.dropwizard.setup.Environment;
+import com.apollographql.federation.graphqljava._Entity;
+import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-@FunctionalInterface
-public interface GraphQLConfiguration<C extends Configuration> {
-  GraphQLFactory getGraphQLFactory(C configuration, Environment environment);
+public abstract class EntitiesDataFetcher implements DataFetcher<Object> {
+  @Override
+  public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
+    return dataFetchingEnvironment.<List<Map<String, Object>>>getArgument(_Entity.argumentName)
+        .stream()
+        .map(this::resolveReference)
+        .collect(Collectors.toList());
+  }
+
+  public abstract Object resolveReference(Map<String, Object> ref);
 }

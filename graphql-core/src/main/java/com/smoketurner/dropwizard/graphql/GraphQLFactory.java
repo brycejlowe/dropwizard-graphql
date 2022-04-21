@@ -15,6 +15,8 @@
  */
 package com.smoketurner.dropwizard.graphql;
 
+import com.apollographql.federation.graphqljava.Federation;
+import com.apollographql.federation.graphqljava.tracing.FederatedTracingInstrumentation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
@@ -27,9 +29,10 @@ import graphql.execution.SubscriptionExecutionStrategy;
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.tracing.TracingInstrumentation;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.TypeResolver;
 import graphql.schema.idl.RuntimeWiring;
-import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.schema.idl.errors.SchemaProblem;
@@ -38,10 +41,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -62,11 +62,17 @@ public class GraphQLFactory {
 
   private boolean enableTracing = true;
 
+  private boolean enableFederatedTracing = false;
+
   @NotNull private CacheBuilderSpec queryCache = CacheBuilderSpec.disableCaching();
 
   @NotNull private List<Instrumentation> instrumentations = new ArrayList<>();
 
   @NotNull private RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring().build();
+
+  private TypeResolver entitiesTypeResolver;
+
+  private DataFetcher<Object> entitiesDataFetcher;
 
   @Deprecated
   @JsonProperty
@@ -132,6 +138,19 @@ public class GraphQLFactory {
   }
 
   @JsonProperty
+  public boolean isEnableFederatedTracing() {
+    return enableFederatedTracing;
+  }
+
+  @JsonProperty
+  public void setEnableFederatedTracing(boolean enabled) {
+    enableFederatedTracing = enabled;
+    if (enabled) {
+      instrumentations.add(new FederatedTracingInstrumentation());
+    }
+  }
+
+  @JsonProperty
   public CacheBuilderSpec getQueryCache() {
     return queryCache;
   }
@@ -151,6 +170,16 @@ public class GraphQLFactory {
     this.instrumentations = Optional.ofNullable(instrumentations).orElseGet(ArrayList::new);
   }
 
+  @JsonIgnore
+  public void setEntitiesTypeResolver(TypeResolver entitiesTypeResolver) {
+    this.entitiesTypeResolver = entitiesTypeResolver;
+  }
+
+  @JsonIgnore
+  public void setEntitiesDataFetcher(DataFetcher<Object> entitiesDataFetcher) {
+    this.entitiesDataFetcher = entitiesDataFetcher;
+  }
+
   public GraphQLSchema build() throws SchemaProblem {
     final SchemaParser parser = new SchemaParser();
     final TypeDefinitionRegistry registry = new TypeDefinitionRegistry();
@@ -162,14 +191,15 @@ public class GraphQLFactory {
     if (!schemaFiles.isEmpty()) {
       schemaFiles.stream()
           .filter(f -> !Strings.isNullOrEmpty(f))
-          .map(f -> getResourceAsReader(f))
-          .map(r -> parser.parse(r))
-          .forEach(p -> registry.merge(p));
+          .map(GraphQLFactory::getResourceAsReader)
+          .map(parser::parse)
+          .forEach(registry::merge);
     }
 
-    final SchemaGenerator generator = new SchemaGenerator();
-    final GraphQLSchema schema = generator.makeExecutableSchema(registry, runtimeWiring);
-    return schema;
+    return Federation.transform(registry, runtimeWiring)
+        .fetchEntities(this.entitiesDataFetcher)
+        .resolveEntityType(this.entitiesTypeResolver)
+        .build();
   }
 
   /**

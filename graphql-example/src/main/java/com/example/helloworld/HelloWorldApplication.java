@@ -17,13 +17,17 @@ package com.example.helloworld;
 
 import com.example.helloworld.api.SayingDataFetcher;
 import com.example.helloworld.resources.HelloWorldResource;
+import com.smoketurner.dropwizard.graphql.EntitiesDataFetcher;
 import com.smoketurner.dropwizard.graphql.GraphQLBundle;
 import com.smoketurner.dropwizard.graphql.GraphQLFactory;
+import graphql.TypeResolutionEnvironment;
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.idl.RuntimeWiring;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.EnumSet;
+import java.util.Map;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -44,12 +48,23 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration> 
     final GraphQLBundle<HelloWorldConfiguration> bundle =
         new GraphQLBundle<HelloWorldConfiguration>() {
           @Override
-          public GraphQLFactory getGraphQLFactory(HelloWorldConfiguration configuration) {
-
+          public GraphQLFactory getGraphQLFactory(
+              HelloWorldConfiguration configuration, Environment environment) {
             final GraphQLFactory factory = configuration.getGraphQLFactory();
+
             // the RuntimeWiring must be configured prior to the run()
             // methods being called so the schema is connected properly.
             factory.setRuntimeWiring(buildWiring(configuration));
+
+            factory.setEntitiesTypeResolver(HelloWorldApplication::entityTypeResolver);
+            factory.setEntitiesDataFetcher(
+                new EntitiesDataFetcher() {
+                  @Override
+                  public Object resolveReference(Map<String, Object> ref) {
+                    return entitiesDataFetcher(ref);
+                  }
+                });
+
             return factory;
           }
         };
@@ -80,5 +95,13 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration> 
             .build();
 
     return wiring;
+  }
+
+  private static GraphQLObjectType entityTypeResolver(TypeResolutionEnvironment environment) {
+    return null;
+  }
+
+  private static EntitiesDataFetcher entitiesDataFetcher(Map<String, Object> ref) {
+    return null;
   }
 }

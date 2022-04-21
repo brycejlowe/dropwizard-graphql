@@ -16,9 +16,9 @@
 package com.smoketurner.dropwizard.graphql;
 
 import graphql.execution.preparsed.PreparsedDocumentProvider;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
+import graphql.kickstart.servlet.GraphQLHttpServlet;
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.GraphQLHttpServlet;
-import graphql.servlet.GraphQLQueryInvoker;
 import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.assets.AssetsBundle;
@@ -35,7 +35,7 @@ public abstract class GraphQLBundle<C extends Configuration>
 
   @Override
   public void run(final C configuration, final Environment environment) throws Exception {
-    final GraphQLFactory factory = getGraphQLFactory(configuration);
+    final GraphQLFactory factory = getGraphQLFactory(configuration, environment);
 
     final PreparsedDocumentProvider provider =
         new CachingPreparsedDocumentProvider(factory.getQueryCache(), environment.metrics());
@@ -48,8 +48,8 @@ public abstract class GraphQLBundle<C extends Configuration>
             .withInstrumentation(factory.getInstrumentations())
             .build();
 
-    final graphql.servlet.GraphQLConfiguration config =
-        graphql.servlet.GraphQLConfiguration.with(schema).with(queryInvoker).build();
+    final graphql.kickstart.servlet.GraphQLConfiguration config =
+        graphql.kickstart.servlet.GraphQLConfiguration.with(schema).with(queryInvoker).build();
 
     final GraphQLHttpServlet servlet = GraphQLHttpServlet.with(config);
 
