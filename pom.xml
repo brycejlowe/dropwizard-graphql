@@ -21,7 +21,7 @@
 
     <groupId>com.smoketurner.dropwizard</groupId>
     <artifactId>dropwizard-graphql</artifactId>
-    <version>${revision}</version>
+    <version>1.3.8-Z2</version>
     <packaging>pom</packaging>
 
     <name>dropwizard-graphql</name>
@@ -29,8 +29,6 @@
     <url>https://github.com/smoketurner/dropwizard-graphql</url>
 
     <properties>
-        <revision>1.3.8-Z1</revision>
-
         <maven.compiler.release>8</maven.compiler.release>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
