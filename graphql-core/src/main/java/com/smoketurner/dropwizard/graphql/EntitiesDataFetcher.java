@@ -27,9 +27,9 @@ public abstract class EntitiesDataFetcher implements DataFetcher<Object> {
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     return dataFetchingEnvironment.<List<Map<String, Object>>>getArgument(_Entity.argumentName)
         .stream()
-        .map(this::resolveReference)
+        .map(o -> resolveReference(o, dataFetchingEnvironment))
         .collect(Collectors.toList());
   }
 
-  public abstract Object resolveReference(Map<String, Object> ref);
+  public abstract Object resolveReference(Map<String, Object> ref, DataFetchingEnvironment dataFetchingEnvironment);
 }

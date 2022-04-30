@@ -21,6 +21,7 @@ import com.smoketurner.dropwizard.graphql.EntitiesDataFetcher;
 import com.smoketurner.dropwizard.graphql.GraphQLBundle;
 import com.smoketurner.dropwizard.graphql.GraphQLFactory;
 import graphql.TypeResolutionEnvironment;
+import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.idl.RuntimeWiring;
 import io.dropwizard.Application;
@@ -60,7 +61,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration> 
             factory.setEntitiesDataFetcher(
                 new EntitiesDataFetcher() {
                   @Override
-                  public Object resolveReference(Map<String, Object> ref) {
+                  public Object resolveReference(Map<String, Object> ref, DataFetchingEnvironment dataFetchingEnvironment) {
                     return entitiesDataFetcher(ref);
                   }
                 });
