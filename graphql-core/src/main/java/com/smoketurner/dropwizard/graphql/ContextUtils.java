@@ -16,7 +16,7 @@ public class ContextUtils {
         return getRequest(dfe).getHeader(headerName);
     }
 
-    public String getHeader(DataFetchingEnvironment dfe, String headerName, String defaultValue) {
+    public static String getHeader(DataFetchingEnvironment dfe, String headerName, String defaultValue) {
         String headerValue = getHeader(dfe, headerName);
         return headerValue != null ? headerValue : defaultValue;
     }
